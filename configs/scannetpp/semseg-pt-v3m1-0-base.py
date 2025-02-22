@@ -70,8 +70,6 @@ scheduler = dict(
     div_factor=10.0,
     final_div_factor=1000.0,
 )
-
-
 param_dicts = [dict(keyword="block", lr=0.0006)]
 
 # dataset settings
