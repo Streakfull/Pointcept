@@ -51,8 +51,7 @@ model = dict(
     ),
     criteria=[
         dict(type="CrossEntropyLoss", loss_weight=1.0, ignore_index=-1),
-        dict(type="LovaszLoss", mode="multiclass",
-             loss_weight=1.0, ignore_index=-1),
+        dict(type="LovaszLoss", mode="multiclass", loss_weight=1.0, ignore_index=-1),
     ],
 )
 
@@ -78,8 +77,7 @@ data = dict(
     ignore_index=-1,
     train=dict(
         type=dataset_type,
-        split=["train_grid1mm_chunk6x6_stride3x3",
-               "val_grid1mm_chunk6x6_stride3x3"],
+        split=["train_grid1mm_chunk6x6_stride3x3", "val_grid1mm_chunk6x6_stride3x3"],
         data_root=data_root,
         transform=[
             dict(type="CenterShift", apply_z=True),
