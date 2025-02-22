@@ -20,8 +20,7 @@ empty_cache_per_epoch = False
 find_unused_parameters = False
 
 mix_prob = 0
-# example: param_dicts = [dict(keyword="block", lr_scale=0.1)]
-param_dicts = None
+param_dicts = None # example: param_dicts = [dict(keyword="block", lr_scale=0.1)]
 
 # hook
 hooks = [
