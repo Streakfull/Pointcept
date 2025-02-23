@@ -93,10 +93,8 @@ class ClsEvaluator(HookBase):
             self.trainer.writer.add_scalar("val/mAcc", m_acc, current_epoch)
             self.trainer.writer.add_scalar("val/allAcc", all_acc, current_epoch)
         self.trainer.logger.info("<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
-        # save for saver
-        self.trainer.comm_info["current_metric_value"] = all_acc
-        # save for saver
-        self.trainer.comm_info["current_metric_name"] = "allAcc"
+        self.trainer.comm_info["current_metric_value"] = all_acc  # save for saver
+        self.trainer.comm_info["current_metric_name"] = "allAcc"  # save for saver
 
     def after_train(self):
         self.trainer.logger.info(
@@ -119,7 +117,6 @@ class SemSegEvaluator(HookBase):
                     input_dict[key] = input_dict[key].cuda(non_blocking=True)
             with torch.no_grad():
                 output_dict = self.trainer.model(input_dict)
-
             output = output_dict["seg_logits"]
             loss = output_dict["loss"]
             pred = output.max(1)[1]
@@ -321,8 +318,7 @@ class InsSegEvaluator(HookBase):
             gt_inst["med_dist"] = -1.0
             gt_inst["vert_count"] = counts[i]
             gt_inst["matched_pred"] = []
-            gt_instances[self.trainer.cfg.data.names[segment_ids[i]]].append(
-                gt_inst)
+            gt_instances[self.trainer.cfg.data.names[segment_ids[i]]].append(gt_inst)
 
         # get pred instances and associate with gt
         pred_instances = dict()
@@ -409,8 +405,7 @@ class InsSegEvaluator(HookBase):
                             has_pred = True
 
                         cur_true = np.ones(len(gt_instances))
-                        cur_score = np.ones(
-                            len(gt_instances)) * (-float("inf"))
+                        cur_score = np.ones(len(gt_instances)) * (-float("inf"))
                         cur_match = np.zeros(len(gt_instances), dtype=bool)
                         # collect matches
                         for gti, gt in enumerate(gt_instances):
@@ -429,15 +424,12 @@ class InsSegEvaluator(HookBase):
                                     # if already have a prediction for this gt,
                                     # the prediction with the lower score is automatically a false positive
                                     if cur_match[gti]:
-                                        max_score = max(
-                                            cur_score[gti], confidence)
-                                        min_score = min(
-                                            cur_score[gti], confidence)
+                                        max_score = max(cur_score[gti], confidence)
+                                        min_score = min(cur_score[gti], confidence)
                                         cur_score[gti] = max_score
                                         # append false positive
                                         cur_true = np.append(cur_true, 0)
-                                        cur_score = np.append(
-                                            cur_score, min_score)
+                                        cur_score = np.append(cur_score, min_score)
                                         cur_match = np.append(cur_match, True)
                                     # otherwise set score
                                     else:
@@ -482,8 +474,7 @@ class InsSegEvaluator(HookBase):
                                 if proportion_ignore <= overlap_th:
                                     cur_true = np.append(cur_true, 0)
                                     confidence = pred["confidence"]
-                                    cur_score = np.append(
-                                        cur_score, confidence)
+                                    cur_score = np.append(cur_score, confidence)
 
                         # append to overall results
                         y_true = np.append(y_true, cur_true)
@@ -520,8 +511,7 @@ class InsSegEvaluator(HookBase):
                         recall = np.zeros(num_prec_recall)
 
                         # deal with the first point
-                        y_true_sorted_cumsum = np.append(
-                            y_true_sorted_cumsum, 0)
+                        y_true_sorted_cumsum = np.append(y_true_sorted_cumsum, 0)
                         # deal with remaining
                         for idx_res, idx_scores in enumerate(unique_indices):
                             cumsum = y_true_sorted_cumsum[idx_scores - 1]
@@ -539,8 +529,7 @@ class InsSegEvaluator(HookBase):
 
                         # compute average of precision-recall curve
                         recall_for_conv = np.copy(recall)
-                        recall_for_conv = np.append(
-                            recall_for_conv[0], recall_for_conv)
+                        recall_for_conv = np.append(recall_for_conv[0], recall_for_conv)
                         recall_for_conv = np.append(recall_for_conv, 0.0)
 
                         stepWidths = np.convolve(
@@ -577,8 +566,7 @@ class InsSegEvaluator(HookBase):
         return ap_scores
 
     def eval(self):
-        self.trainer.logger.info(
-            ">>>>>>>>>>>>>>>> Start Evaluation >>>>>>>>>>>>>>>>")
+        self.trainer.logger.info(">>>>>>>>>>>>>>>> Start Evaluation >>>>>>>>>>>>>>>>")
         self.trainer.model.eval()
         scenes = []
         for i, input_dict in enumerate(self.trainer.val_loader):
@@ -648,13 +636,8 @@ class InsSegEvaluator(HookBase):
         if self.trainer.writer is not None:
             self.trainer.writer.add_scalar("val/loss", loss_avg, current_epoch)
             self.trainer.writer.add_scalar("val/mAP", all_ap, current_epoch)
-            self.trainer.writer.add_scalar(
-                "val/AP50", all_ap_50, current_epoch)
-            self.trainer.writer.add_scalar(
-                "val/AP25", all_ap_25, current_epoch)
-        self.trainer.logger.info(
-            "<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
-        # save for saver
-        self.trainer.comm_info["current_metric_value"] = all_ap_50
-        # save for saver
-        self.trainer.comm_info["current_metric_name"] = "AP50"
+            self.trainer.writer.add_scalar("val/AP50", all_ap_50, current_epoch)
+            self.trainer.writer.add_scalar("val/AP25", all_ap_25, current_epoch)
+        self.trainer.logger.info("<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
+        self.trainer.comm_info["current_metric_value"] = all_ap_50  # save for saver
+        self.trainer.comm_info["current_metric_name"] = "AP50"  # save for saver

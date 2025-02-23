@@ -349,6 +349,7 @@ class SemSegTester(TesterBase):
     def collate_fn(batch):
         return batch
 
+
 @TESTERS.register_module()
 class ClsTester(TesterBase):
     def test(self):

@@ -85,7 +85,8 @@ class CACSegmentor(nn.Module):
             tmp_proto = (feat * tmp_mask).sum(0) / (tmp_mask.sum(0) + 1e-4)  # c
             onehot_vec = torch.zeros(new_proto.shape[0], 1).cuda()  # cls, 1
             onehot_vec[tmp_y.long()] = 1
-            new_proto = (new_proto * (1 - onehot_vec) + tmp_proto.unsqueeze(0) * onehot_vec
+            new_proto = (
+                new_proto * (1 - onehot_vec) + tmp_proto.unsqueeze(0) * onehot_vec
             )
 
         new_proto = torch.cat([new_proto, proto], -1)

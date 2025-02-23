@@ -13,6 +13,7 @@ import torch.nn as nn
 import spconv.pytorch as spconv
 import torch_scatter
 from timm.models.layers import DropPath
+
 try:
     import flash_attn
 except ImportError:
@@ -33,8 +34,7 @@ class RPE(torch.nn.Module):
         self.num_heads = num_heads
         self.pos_bnd = int((4 * patch_size) ** (1 / 3) * 2)
         self.rpe_num = 2 * self.pos_bnd + 1
-        self.rpe_table = torch.nn.Parameter(
-            torch.zeros(3 * self.rpe_num, num_heads))
+        self.rpe_table = torch.nn.Parameter(torch.zeros(3 * self.rpe_num, num_heads))
         torch.nn.init.trunc_normal_(self.rpe_table, std=0.02)
 
     def forward(self, coord):
@@ -141,7 +141,7 @@ class SerializedAttention(PointModule):
             unpad = torch.arange(_offset[-1], device=offset.device)
             cu_seqlens = []
             for i in range(len(offset)):
-                unpad[_offset[i]: _offset[i + 1]] += _offset_pad[i] - _offset[i]
+                unpad[_offset[i] : _offset[i + 1]] += _offset_pad[i] - _offset[i]
                 if bincount[i] != bincount_pad[i]:
                     pad[
                         _offset_pad[i + 1]
@@ -153,7 +153,7 @@ class SerializedAttention(PointModule):
                         + (bincount[i] % self.patch_size) : _offset_pad[i + 1]
                         - self.patch_size
                     ]
-                pad[_offset_pad[i]: _offset_pad[i + 1]] -= _offset_pad[i] - _offset[i]
+                pad[_offset_pad[i] : _offset_pad[i + 1]] -= _offset_pad[i] - _offset[i]
                 cu_seqlens.append(
                     torch.arange(
                         _offset_pad[i],

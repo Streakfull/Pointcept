@@ -148,6 +148,7 @@ class Trainer(TrainerBase):
         self.logger.info("=> Building hooks ...")
         self.register_hooks(self.cfg.hooks)
         self.init_wandb(cfg, wandb_cfg)
+        self.global_step = 0
 
     def init_wandb(self, cfg, wandb_cfg):
         wandb_project_name = cfg.get("wandb_project_name", "default_project")
@@ -164,7 +165,7 @@ class Trainer(TrainerBase):
         )
 
         self.wandb.init()
-        self.global_step = 0
+ 
 
     def train(self):
         with EventStorage() as self.storage, ExceptionWriter():

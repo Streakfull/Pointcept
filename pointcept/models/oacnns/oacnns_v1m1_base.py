@@ -206,7 +206,8 @@ class UpBlock(nn.Module):
     def forward(self, x, skip_x):
         x = self.up(x)
         x = x.replace_feature(
-            self.fuse(torch.cat([x.features, skip_x.features], dim=1)) + x.features)
+            self.fuse(torch.cat([x.features, skip_x.features], dim=1)) + x.features
+        )
         return x
 
 

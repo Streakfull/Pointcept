@@ -354,7 +354,8 @@ class OctFormerStage(torch.nn.Module):
                     qk_scale=qk_scale,
                     attn_drop=attn_drop,
                     proj_drop=proj_drop,
-                    drop_path=(drop_path[i] if isinstance(drop_path, list) else drop_path
+                    drop_path=(
+                        drop_path[i] if isinstance(drop_path, list) else drop_path
                     ),
                     nempty=nempty,
                     activation=activation,
@@ -537,8 +538,7 @@ class OctFormer(torch.nn.Module):
         self.octree_full_depth = octree_full_depth
         drop_ratio = torch.linspace(0, drop_path, sum(num_blocks)).tolist()
 
-        self.patch_embed = PatchEmbed(
-            in_channels, channels[0], stem_down, nempty)
+        self.patch_embed = PatchEmbed(in_channels, channels[0], stem_down, nempty)
         self.layers = torch.nn.ModuleList(
             [
                 OctFormerStage(
