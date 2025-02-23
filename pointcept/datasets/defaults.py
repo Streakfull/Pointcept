@@ -80,7 +80,6 @@ class DefaultDataset(Dataset):
                 data_list += glob.glob(os.path.join(self.data_root, split, "*"))
         else:
             raise NotImplementedError
-
         return data_list
 
     def get_data(self, idx):
@@ -137,8 +136,7 @@ class DefaultDataset(Dataset):
         # load data
         data_dict = self.get_data(idx)
         data_dict = self.transform(data_dict)
-        result_dict = dict(segment=data_dict.pop(
-            "segment"), name=data_dict.pop("name"))
+        result_dict = dict(segment=data_dict.pop("segment"), name=data_dict.pop("name"))
         if "origin_segment" in data_dict:
             assert "inverse" in data_dict
             result_dict["origin_segment"] = data_dict.pop("origin_segment")

@@ -57,8 +57,7 @@ class TesterBase:
 
     def build_model(self):
         model = build_model(self.cfg.model)
-        n_parameters = sum(p.numel()
-                           for p in model.parameters() if p.requires_grad)
+        n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
         self.logger.info(f"Num params: {n_parameters}")
         model = create_ddp_model(
             model.cuda(),
@@ -84,15 +83,13 @@ class TesterBase:
                 )
             )
         else:
-            raise RuntimeError(
-                "=> No checkpoint found at '{}'".format(self.cfg.weight))
+            raise RuntimeError("=> No checkpoint found at '{}'".format(self.cfg.weight))
         return model
 
     def build_test_loader(self):
         test_dataset = build_dataset(self.cfg.data.test)
         if comm.get_world_size() > 1:
-            test_sampler = torch.utils.data.distributed.DistributedSampler(
-                test_dataset)
+            test_sampler = torch.utils.data.distributed.DistributedSampler(test_dataset)
         else:
             test_sampler = None
         test_loader = torch.utils.data.DataLoader(
@@ -100,8 +97,7 @@ class TesterBase:
             batch_size=self.cfg.batch_size_test_per_gpu,
             shuffle=False,
             num_workers=self.cfg.batch_size_test_per_gpu,
-            # num_workers=0,
-            pin_memory=False,
+            pin_memory=True,
             sampler=test_sampler,
 
             collate_fn=self.__class__.collate_fn,
@@ -114,17 +110,6 @@ class TesterBase:
     @staticmethod
     def collate_fn(batch):
         raise collate_fn(batch)
-
-
-# seen = [
-#     '09c1414f1b', '286b55a2bf', '45b0dac5e3', '7831862f02', 'bcd2436daf', 'd755b3d9d8',
-#     '0d2ee665be', '31a2c91c43', '5748ce6f01', '7b6477cb95', 'bde1e479ad', 'e398684d27',
-#     '13c3e046d7', '3864514494', '5942004064', '7bc286c1b6', 'c49a8c6cff', 'f3d64c30f8',
-#     '1ada7a0617', '38d58a7a31', '5eb31827b7', '825d228aec', 'c4c04e6d6c', 'f9f95681fd',
-#     '21d970d8de', '3e8bba0176', '5ee7c22ba0', 'a8bf42d646', 'c50d2d1d42', 'fb5a96b1a2',
-#     '25f3b7a318', '3f15a9266d', '5f99900f09', 'a980334473', 'c5439f4607',
-#     '27dd4da69e', '40aec5fffa', '6115eddb86', 'b0a08200c9', 'cc5237fd77'
-# ]
 
 
 @TESTERS.register_module()
@@ -168,30 +153,17 @@ class SemSegTester(TesterBase):
                 )
             )
             with open(
-                os.path.join(save_path, "submit", "test",
-                             "submission.json"), "w"
+                os.path.join(save_path, "submit", "test", "submission.json"), "w"
             ) as f:
                 json.dump(submission, f, indent=4)
         comm.synchronize()
         record = {}
-        # fragment inference
-        # import pdb
-        # pdb.set_trace()
-       # import pdb
-        # pdb.set_trace()
-        # import pdb
-        # pdb.set_trace()
         for idx, data_dict in enumerate(self.test_loader):
             end = time.time()
-            # print("BEFORE ", idx)
-            # if (idx < 5):
-            #     continue
             data_dict = data_dict[0]  # current assume batch size is 1
             fragment_list = data_dict.pop("fragment_list")
             segment = data_dict.pop("segment")
             data_name = data_dict.pop("name")
-            print(data_name, "Name")
-            print("At: ", idx)
             pred_save_path = os.path.join(
                 save_path, "{}_pred.npy".format(data_name))
             if os.path.isfile(pred_save_path):
@@ -204,8 +176,7 @@ class SemSegTester(TesterBase):
                 if "origin_segment" in data_dict.keys():
                     segment = data_dict["origin_segment"]
             else:
-                pred = torch.zeros(
-                    (segment.size, self.cfg.data.num_classes)).cuda()
+                pred = torch.zeros((segment.size, self.cfg.data.num_classes)).cuda()
                 for i in range(len(fragment_list)):
                     fragment_batch_size = 1
                     s_i, e_i = i * fragment_batch_size, min(
@@ -214,14 +185,11 @@ class SemSegTester(TesterBase):
                     input_dict = collate_fn(fragment_list[s_i:e_i])
                     for key in input_dict.keys():
                         if isinstance(input_dict[key], torch.Tensor):
-                            input_dict[key] = input_dict[key].cuda(
-                                non_blocking=True)
+                            input_dict[key] = input_dict[key].cuda(non_blocking=True)
                     idx_part = input_dict["index"]
                     with torch.no_grad():
-                        pred_part = self.model(input_dict)[
-                            "seg_logits"]  # (n, k)
+                        pred_part = self.model(input_dict)["seg_logits"]  # (n, k)
                         pred_part = F.softmax(pred_part, -1)
-                        torch.cuda.empty_cache()
                         if self.cfg.empty_cache:
                             torch.cuda.empty_cache()
                         bs = 0
@@ -252,15 +220,13 @@ class SemSegTester(TesterBase):
                 or self.cfg.data.test.type == "ScanNet200Dataset"
             ):
                 np.savetxt(
-                    os.path.join(save_path, "submit",
-                                 "{}.txt".format(data_name)),
+                    os.path.join(save_path, "submit", "{}.txt".format(data_name)),
                     self.test_loader.dataset.class2id[pred].reshape([-1, 1]),
                     fmt="%d",
                 )
             elif self.cfg.data.test.type == "ScanNetPPDataset":
                 np.savetxt(
-                    os.path.join(save_path, "submit",
-                                 "{}.txt".format(data_name)),
+                    os.path.join(save_path, "submit", "{}.txt".format(data_name)),
                     pred.astype(np.int32),
                     delimiter=",",
                     fmt="%d",
@@ -316,8 +282,7 @@ class SemSegTester(TesterBase):
             acc = sum(intersection) / (sum(target) + 1e-10)
 
             m_iou = np.mean(intersection_meter.sum / (union_meter.sum + 1e-10))
-            m_acc = np.mean(intersection_meter.sum /
-                            (target_meter.sum + 1e-10))
+            m_acc = np.mean(intersection_meter.sum / (target_meter.sum + 1e-10))
 
             batch_time.update(time.time() - end)
             logger.info(
@@ -336,7 +301,7 @@ class SemSegTester(TesterBase):
                     m_iou=m_iou,
                 )
             )
-            torch.cuda.empty_cache()
+
 
         logger.info("Syncing ...")
         comm.synchronize()
@@ -351,17 +316,13 @@ class SemSegTester(TesterBase):
             intersection = np.sum(
                 [meters["intersection"] for _, meters in record.items()], axis=0
             )
-            union = np.sum([meters["union"]
-                           for _, meters in record.items()], axis=0)
-            target = np.sum([meters["target"]
-                            for _, meters in record.items()], axis=0)
+            union = np.sum([meters["union"] for _, meters in record.items()], axis=0)
+            target = np.sum([meters["target"] for _, meters in record.items()], axis=0)
 
             if self.cfg.data.test.type == "S3DISDataset":
                 torch.save(
-                    dict(intersection=intersection,
-                         union=union, target=target),
-                    os.path.join(
-                        save_path, f"{self.test_loader.dataset.split}.pth"),
+                    dict(intersection=intersection, union=union, target=target),
+                    os.path.join(save_path, f"{self.test_loader.dataset.split}.pth"),
                 )
 
             iou_class = intersection / (union + 1e-10)
@@ -631,9 +592,8 @@ class PartSegTester(TesterBase):
                 with torch.no_grad():
                     pred_part = self.model(input_dict)["cls_logits"]
                     pred_part = F.softmax(pred_part, -1)
-                # if self.cfg.empty_cache:
-                #     torch.cuda.empty_cache()
-                torch.cuda.empty_cache()
+                if self.cfg.empty_cache:
+                    torch.cuda.empty_cache()
                 pred_part = pred_part.reshape(-1,
                                               label.size, self.cfg.data.num_classes)
                 pred = pred + pred_part.total(dim=0)

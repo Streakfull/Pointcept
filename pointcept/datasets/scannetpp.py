@@ -76,4 +76,3 @@ class ScanNetPPDataset(DefaultDataset):
         else:
             raise NotImplementedError
         return data_dict
-

@@ -25,8 +25,7 @@ class ClsEvaluator(HookBase):
             self.eval()
 
     def eval(self):
-        self.trainer.logger.info(
-            ">>>>>>>>>>>>>>>> Start Evaluation >>>>>>>>>>>>>>>>")
+        self.trainer.logger.info(">>>>>>>>>>>>>>>> Start Evaluation >>>>>>>>>>>>>>>>")
         self.trainer.model.eval()
         for i, input_dict in enumerate(self.trainer.val_loader):
             for key in input_dict.keys():
@@ -92,10 +91,8 @@ class ClsEvaluator(HookBase):
             self.trainer.writer.add_scalar("val/loss", loss_avg, current_epoch)
             self.trainer.writer.add_scalar("val/mIoU", m_iou, current_epoch)
             self.trainer.writer.add_scalar("val/mAcc", m_acc, current_epoch)
-            self.trainer.writer.add_scalar(
-                "val/allAcc", all_acc, current_epoch)
-        self.trainer.logger.info(
-            "<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
+            self.trainer.writer.add_scalar("val/allAcc", all_acc, current_epoch)
+        self.trainer.logger.info("<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
         # save for saver
         self.trainer.comm_info["current_metric_value"] = all_acc
         # save for saver
@@ -121,7 +118,6 @@ class SemSegEvaluator(HookBase):
                 if isinstance(input_dict[key], torch.Tensor):
                     input_dict[key] = input_dict[key].cuda(non_blocking=True)
             with torch.no_grad():
-                # with torch.cuda.amp.autocast(enabled=self.trainer.cfg.enable_amp):
                 output_dict = self.trainer.model(input_dict)
 
             output = output_dict["seg_logits"]
@@ -208,8 +204,7 @@ class SemSegEvaluator(HookBase):
                 "val/allAcc", all_acc, current_epoch)
             self.trainer.wandb.log(
                 {"val/loss":  loss_avg, "val/mIoU": m_iou, "val/mAcc": m_acc})
-        self.trainer.logger.info(
-            "<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
+        self.trainer.logger.info("<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
         # save for saver
         self.trainer.comm_info["current_metric_value"] = m_iou
         # save for saver
@@ -228,10 +223,8 @@ class SemSegEvaluatorTrain(HookBase):
             self.eval()
 
     def eval(self):
-        self.trainer.logger.info(
-            ">>>>>>>>>>>>>>>> Start Evaluation Train >>>>>>>>>>>>>>>>")
-        intersection = self.trainer.storage.history(
-            "train_intersection").total
+        self.trainer.logger.info(">>>>>>>>>>>>>>>> Start Evaluation Train >>>>>>>>>>>>>>>>")
+        intersection = self.trainer.storage.history("train_intersection").total
         union = self.trainer.storage.history("train_union").total
         target = self.trainer.storage.history("train_target").total
         iou_class = intersection / (union + 1e-10)
@@ -264,12 +257,9 @@ class SemSegEvaluatorTrain(HookBase):
            # self.trainer.writer.add_scalar("val/loss", loss_avg, current_epoch)
             self.trainer.writer.add_scalar("train/mIoU", m_iou, current_epoch)
             self.trainer.writer.add_scalar("train/mAcc", m_acc, current_epoch)
-            self.trainer.writer.add_scalar(
-                "train/allAcc", all_acc, current_epoch)
-            self.trainer.wandb.log(
-                {"train/mIoU": m_iou, "train/mAcc": m_acc})
-        self.trainer.logger.info(
-            "<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
+            self.trainer.writer.add_scalar("train/allAcc", all_acc, current_epoch)
+            self.trainer.wandb.log({"train/mIoU": m_iou, "train/mAcc": m_acc})
+        self.trainer.logger.info("<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
 
 
     def after_train(self):

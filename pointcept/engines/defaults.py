@@ -27,8 +27,7 @@ def create_ddp_model(model, *, fp16_compression=False, **kwargs):
     Args:
         model: a torch.nn.Module
         fp16_compression: add fp16 compression hooks to the ddp object.
-            #torch.distributed.algorithms.ddp_comm_hooks.default_hooks.fp16_compress_hook
-            See more at https://pytorch.org/docs/stable/ddp_comm_hooks.html
+            See more at https://pytorch.org/docs/stable/ddp_comm_hooks.html#torch.distributed.algorithms.ddp_comm_hooks.default_hooks.fp16_compress_hook
         kwargs: other arguments of :module:`torch.nn.parallel.DistributedDataParallel`.
     """
     if comm.get_world_size() == 1:
