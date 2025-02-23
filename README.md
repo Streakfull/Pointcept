@@ -899,7 +899,7 @@ sh scripts/train.sh -g 8 -d scannet -c pretrain-msc-v1m2-0-spunet-csc -n pretrai
 | `use_step_logging` | boolean | If `True`, enables step-based logging instead of epoch-based logging. | `True` |
 | `log_every`        | integer | Defines how frequently (in steps) logs should be recorded. | `500` |
 
-   
+For more info refer to [W&B](https://docs.wandb.ai/ref/)
 
 ## Acknowledgement
 _Pointcept_ is designed by [Xiaoyang](https://xywu.me/), named by [Yixing](https://github.com/yxlao) and the logo is created by [Yuechen](https://julianjuaner.github.io/). It is derived from [Hengshuang](https://hszhao.github.io/)'s [Semseg](https://github.com/hszhao/semseg) and inspirited by several repos, e.g., [MinkowskiEngine](https://github.com/NVIDIA/MinkowskiEngine), [pointnet2](https://github.com/charlesq34/pointnet2), [mmcv](https://github.com/open-mmlab/mmcv/tree/master/mmcv), and [Detectron2](https://github.com/facebookresearch/detectron2).
