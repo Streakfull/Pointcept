@@ -9,6 +9,11 @@ num_worker = 24
 mix_prob = 0.8
 empty_cache = False
 enable_amp = True
+enable_wandb = True
+wandb_project_name = "ptV2"
+wandb_tags = ["Full_train"]
+use_step_logging = True
+log_every = 500
 
 # model settings
 model = dict(
@@ -58,7 +63,8 @@ scheduler = dict(
 
 # dataset settings
 dataset_type = "ScanNetPPDataset"
-data_root = "data/scannetpp"
+# data_root = "data/scannetpp"
+data_root = "./raw_dataset"
 
 data = dict(
     num_classes=100,
@@ -132,7 +138,7 @@ data = dict(
     ),
     test=dict(
         type=dataset_type,
-        split="val",
+        split="test",
         data_root=data_root,
         transform=[
             dict(type="CenterShift", apply_z=True),

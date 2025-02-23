@@ -9,6 +9,11 @@ num_worker = 24
 mix_prob = 0.8
 empty_cache = False
 enable_amp = True
+wandb_project_name = "spunet"
+wandb_tags = ["spunet-full-train"]
+enable_wandb = True
+use_step_logging = True
+log_every = 500
 
 # model settings
 model = dict(
@@ -20,7 +25,9 @@ model = dict(
         channels=(32, 64, 128, 256, 256, 128, 96, 96),
         layers=(2, 3, 4, 6, 2, 2, 2, 2),
     ),
-    criteria=[dict(type="CrossEntropyLoss", loss_weight=1.0, ignore_index=-1)],
+    criteria=[dict(type="CrossEntropyLoss", loss_weight=1.0, ignore_index=-1),
+              dict(type="LovaszLoss", mode="multiclass", loss_weight=1.0, ignore_index=-1),],
+
 )
 
 
@@ -38,7 +45,8 @@ scheduler = dict(
 
 # dataset settings
 dataset_type = "ScanNetPPDataset"
-data_root = "data/scannetpp"
+# data_root = "data/scannetpp"
+data_root = "./raw_dataset"
 
 data = dict(
     num_classes=100,
@@ -112,7 +120,7 @@ data = dict(
     ),
     test=dict(
         type=dataset_type,
-        split="val",
+        split="test",
         data_root=data_root,
         transform=[
             dict(type="CenterShift", apply_z=True),
