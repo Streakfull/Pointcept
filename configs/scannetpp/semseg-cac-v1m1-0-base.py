@@ -4,14 +4,14 @@ _base_ = [
 ]
 
 
-batch_size = 4  # bs: total bs in all gpus
+batch_size = 8  # bs: total bs in all gpus
 num_worker = 24
 mix_prob = 0.8
 empty_cache = False
 enable_amp = True
-# Logging Config
-wandb_project_name = "cac"
-wandb_tags = ["Full Train"]
+# logging settings
+wandb_project_name = "pointcept"
+wandb_tags = ["cac"]
 enable_wandb = True
 use_step_logging = True
 log_every = 500
@@ -81,6 +81,7 @@ scheduler = dict(
 # dataset settings
 dataset_type = "ScanNetPPDataset"
 data_root = "data/scannetpp"
+
 
 data = dict(
     num_classes=100,

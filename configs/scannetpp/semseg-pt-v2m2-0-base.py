@@ -9,9 +9,10 @@ num_worker = 24
 mix_prob = 0.8
 empty_cache = False
 enable_amp = True
+# logging settings
 enable_wandb = True
-wandb_project_name = "ptV2"
-wandb_tags = ["Full_train"]
+wandb_project_name = "pointcept"
+wandb_tags = ["PTv2"]
 use_step_logging = True
 log_every = 500
 
@@ -63,8 +64,8 @@ scheduler = dict(
 
 # dataset settings
 dataset_type = "ScanNetPPDataset"
-# data_root = "data/scannetpp"
-data_root = "./raw_dataset"
+data_root = "data/scannetpp"
+
 
 data = dict(
     num_classes=100,
