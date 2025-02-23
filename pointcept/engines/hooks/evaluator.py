@@ -262,7 +262,9 @@ class SemSegEvaluatorTrain(HookBase):
             self.trainer.writer.add_scalar("train/mAcc", m_acc, current_epoch)
             self.trainer.writer.add_scalar("train/allAcc", all_acc, current_epoch)
             self.trainer.wandb.log({"train/mIoU": m_iou, "train/mAcc": m_acc})
-        self.trainer.logger.info("<<<<<<<<<<<<<<<<< End Evaluation Train <<<<<<<<<<<<<<<<<")
+        self.trainer.logger.info(
+            "<<<<<<<<<<<<<<<<< End Evaluation Train <<<<<<<<<<<<<<<<<"
+        )
 
     def after_train(self):
         self.trainer.logger.info("Evaluation Train Done")
