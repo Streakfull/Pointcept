@@ -16,7 +16,6 @@ enable_wandb = True
 use_step_logging = True
 log_every = 500
 
-
 # model settings
 model = dict(
     type="CAC-v1m1",
@@ -79,10 +78,9 @@ scheduler = dict(
     final_div_factor=1000.0,
 )
 
+# dataset settings
 dataset_type = "ScanNetPPDataset"
-# data_root = "data/scannetpp"
-data_root = "./raw_dataset"
-
+data_root = "data/scannetpp"
 
 data = dict(
     num_classes=100,

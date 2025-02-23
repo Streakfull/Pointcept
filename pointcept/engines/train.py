@@ -157,7 +157,7 @@ class Trainer(TrainerBase):
         self.use_step_logging = cfg.get("use_step_logging", False)
         self.log_every = cfg.get(
             "log_every", 500
-        )  # Default log every 10 steps if enabled
+        )  # Default log every 500 steps if enabled
 
         self.wandb = Wandb(
             self.enable_wandb,
