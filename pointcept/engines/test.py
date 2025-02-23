@@ -157,14 +157,14 @@ class SemSegTester(TesterBase):
                 json.dump(submission, f, indent=4)
         comm.synchronize()
         record = {}
+        # fragment inference
         for idx, data_dict in enumerate(self.test_loader):
             end = time.time()
             data_dict = data_dict[0]  # current assume batch size is 1
             fragment_list = data_dict.pop("fragment_list")
             segment = data_dict.pop("segment")
             data_name = data_dict.pop("name")
-            pred_save_path = os.path.join(
-                save_path, "{}_pred.npy".format(data_name))
+            pred_save_path = os.path.join(save_path, "{}_pred.npy".format(data_name))
             if os.path.isfile(pred_save_path):
                 logger.info(
                     "{}/{}: {}, loaded pred and label.".format(
@@ -301,7 +301,6 @@ class SemSegTester(TesterBase):
                 )
             )
 
-
         logger.info("Syncing ...")
         comm.synchronize()
         record_sync = comm.gather(record, dst=0)
@@ -388,8 +387,7 @@ class ClsTester(TesterBase):
                 union
             ), target_meter.update(target)
 
-            accuracy = sum(intersection_meter.val) / \
-                (sum(target_meter.val) + 1e-10)
+            accuracy = sum(intersection_meter.val) / (sum(target_meter.val) + 1e-10)
             batch_time.update(time.time() - end)
 
             logger.info(
@@ -448,8 +446,7 @@ class ClsVotingTester(TesterBase):
     def test(self):
         for i in range(self.num_repeat):
             logger = get_root_logger()
-            logger.info(
-                f">>>>>>>>>>>>>>>> Start Evaluation {i + 1} >>>>>>>>>>>>>>>>")
+            logger.info(f">>>>>>>>>>>>>>>> Start Evaluation {i + 1} >>>>>>>>>>>>>>>>")
             record = self.test_once()
             if comm.is_main_process():
                 if record[self.metric] > self.best_metric:
@@ -499,8 +496,7 @@ class ClsVotingTester(TesterBase):
             target_meter.update(target)
             record[data_name] = dict(intersection=intersection, target=target)
             acc = sum(intersection) / (sum(target) + 1e-10)
-            m_acc = np.mean(intersection_meter.sum /
-                            (target_meter.sum + 1e-10))
+            m_acc = np.mean(intersection_meter.sum / (target_meter.sum + 1e-10))
             batch_time.update(time.time() - end)
             logger.info(
                 "Test: {} [{}/{}] "
@@ -528,14 +524,12 @@ class ClsVotingTester(TesterBase):
             intersection = np.sum(
                 [meters["intersection"] for _, meters in record.items()], axis=0
             )
-            target = np.sum([meters["target"]
-                            for _, meters in record.items()], axis=0)
+            target = np.sum([meters["target"] for _, meters in record.items()], axis=0)
             accuracy_class = intersection / (target + 1e-10)
             mAcc = np.mean(accuracy_class)
             allAcc = sum(intersection) / (sum(target) + 1e-10)
 
-            logger.info(
-                "Val result: mAcc/allAcc {:.4f}/{:.4f}".format(mAcc, allAcc))
+            logger.info("Val result: mAcc/allAcc {:.4f}/{:.4f}".format(mAcc, allAcc))
             for i in range(self.cfg.data.num_classes):
                 logger.info(
                     "Class_{idx} - {name} Result: iou/accuracy {accuracy:.4f}".format(
@@ -561,13 +555,11 @@ class PartSegTester(TesterBase):
         batch_time = AverageMeter()
 
         num_categories = len(self.test_loader.dataset.categories)
-        iou_category, iou_count = np.zeros(
-            num_categories), np.zeros(num_categories)
+        iou_category, iou_count = np.zeros(num_categories), np.zeros(num_categories)
         self.model.eval()
 
         save_path = os.path.join(
-            self.cfg.save_path, "result", "test_epoch{}".format(
-                self.cfg.test_epoch)
+            self.cfg.save_path, "result", "test_epoch{}".format(self.cfg.test_epoch)
         )
         make_dirs(save_path)
 
@@ -577,8 +569,7 @@ class PartSegTester(TesterBase):
 
             data_dict_list, label = test_dataset[idx]
             pred = torch.zeros((label.size, self.cfg.data.num_classes)).cuda()
-            batch_num = int(
-                np.ceil(len(data_dict_list) / self.cfg.batch_size_test))
+            batch_num = int(np.ceil(len(data_dict_list) / self.cfg.batch_size_test))
             for i in range(batch_num):
                 s_i, e_i = i * self.cfg.batch_size_test, min(
                     (i + 1) * self.cfg.batch_size_test, len(data_dict_list)
@@ -586,15 +577,13 @@ class PartSegTester(TesterBase):
                 input_dict = collate_fn(data_dict_list[s_i:e_i])
                 for key in input_dict.keys():
                     if isinstance(input_dict[key], torch.Tensor):
-                        input_dict[key] = input_dict[key].cuda(
-                            non_blocking=True)
+                        input_dict[key] = input_dict[key].cuda(non_blocking=True)
                 with torch.no_grad():
                     pred_part = self.model(input_dict)["cls_logits"]
                     pred_part = F.softmax(pred_part, -1)
                 if self.cfg.empty_cache:
                     torch.cuda.empty_cache()
-                pred_part = pred_part.reshape(-1,
-                                              label.size, self.cfg.data.num_classes)
+                pred_part = pred_part.reshape(-1, label.size, self.cfg.data.num_classes)
                 pred = pred + pred_part.total(dim=0)
                 logger.info(
                     "Test: {} {}/{}, Batch: {batch_idx}/{batch_num}".format(
@@ -633,8 +622,7 @@ class PartSegTester(TesterBase):
         ins_mIoU = iou_category.sum() / (iou_count.sum() + 1e-10)
         cat_mIoU = (iou_category / (iou_count + 1e-10)).mean()
         logger.info(
-            "Val result: ins.mIoU/cat.mIoU {:.4f}/{:.4f}.".format(
-                ins_mIoU, cat_mIoU)
+            "Val result: ins.mIoU/cat.mIoU {:.4f}/{:.4f}.".format(ins_mIoU, cat_mIoU)
         )
         for i in range(num_categories):
             logger.info(
