@@ -10,7 +10,6 @@ mix_prob = 0.8
 empty_cache = False
 enable_amp = True
 
-
 # model settings
 model = dict(
     type="DefaultSegmentor",
@@ -43,7 +42,6 @@ scheduler = dict(
 # dataset settings
 dataset_type = "ScanNetPPDataset"
 data_root = "data/scannetpp"
-
 
 data = dict(
     num_classes=100,

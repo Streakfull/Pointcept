@@ -106,7 +106,6 @@ class InformationWriter(HookBase):
         if "model_output_dict" in self.trainer.comm_info.keys():
             model_output_dict = self.trainer.comm_info["model_output_dict"]
             self.model_output_keys = model_output_dict.keys()
-
             for key in self.model_output_keys:
                 self.trainer.storage.put_scalar(key, model_output_dict[key].item())
 
