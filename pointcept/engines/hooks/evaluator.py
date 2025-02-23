@@ -208,10 +208,8 @@ class SemSegEvaluator(HookBase):
                 {"val/loss": loss_avg, "val/mIoU": m_iou, "val/mAcc": m_acc}
             )
         self.trainer.logger.info("<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
-        # save for saver
-        self.trainer.comm_info["current_metric_value"] = m_iou
-        # save for saver
-        self.trainer.comm_info["current_metric_name"] = "mIoU"
+        self.trainer.comm_info["current_metric_value"] = m_iou  # save for saver
+        self.trainer.comm_info["current_metric_name"] = "mIoU"  # save for saver
 
     def after_train(self):
         self.trainer.logger.info(
@@ -264,10 +262,10 @@ class SemSegEvaluatorTrain(HookBase):
             self.trainer.writer.add_scalar("train/mAcc", m_acc, current_epoch)
             self.trainer.writer.add_scalar("train/allAcc", all_acc, current_epoch)
             self.trainer.wandb.log({"train/mIoU": m_iou, "train/mAcc": m_acc})
-        self.trainer.logger.info("<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
+        self.trainer.logger.info("<<<<<<<<<<<<<<<<< End Evaluation Train <<<<<<<<<<<<<<<<<")
 
     def after_train(self):
-        print("Train Evaluation Done")
+        self.trainer.logger.info("Evaluation Train Done")
 
 
 @HOOKS.register_module()

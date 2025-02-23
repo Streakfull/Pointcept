@@ -7,7 +7,6 @@ Please cite our work if the code is helpful to you.
 
 import sys
 import glob
-import random
 import os
 import shutil
 import time
@@ -24,10 +23,10 @@ from pointcept.utils.comm import is_main_process, synchronize, get_world_size
 from pointcept.utils.cache import shared_dict
 import pointcept.utils.comm as comm
 from pointcept.engines.test import TESTERS
-import wandb
-from pointcept.utils.misc import intersection_and_union_gpu
+
 from .default import HookBase
 from .builder import HOOKS
+from pointcept.utils.misc import intersection_and_union_gpu
 
 
 @HOOKS.register_module()
@@ -140,7 +139,6 @@ class InformationWriter(HookBase):
             self.trainer.comm_info["iter_info"] += "{key}: {value:.4f} ".format(
                 key=key, value=self.trainer.storage.history(key).val
             )
-
         lr = self.trainer.optimizer.state_dict()["param_groups"][0]["lr"]
         self.trainer.comm_info["iter_info"] += "Lr: {lr:.5f}".format(lr=lr)
         self.trainer.logger.info(self.trainer.comm_info["iter_info"])

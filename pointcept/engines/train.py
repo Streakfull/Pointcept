@@ -12,7 +12,6 @@ import torch
 import torch.nn as nn
 import torch.utils.data
 from functools import partial
-import json
 
 if sys.version_info >= (3, 10):
     from collections.abc import Iterator
@@ -151,7 +150,7 @@ class Trainer(TrainerBase):
         self.global_step = 0
 
     def init_wandb(self, cfg, wandb_cfg):
-        wandb_project_name = cfg.get("wandb_project_name", "default_project")
+        wandb_project_name = cfg.get("wandb_project_name", "pointcept")
         wandb_tags = cfg.get("wandb_tags", [])
         self.enable_wandb = cfg.get("enable_wandb", False)
         self.use_step_logging = cfg.get("use_step_logging", False)
@@ -243,7 +242,6 @@ class Trainer(TrainerBase):
             self.scheduler.step()
         if self.cfg.empty_cache:
             torch.cuda.empty_cache()
-
         self.comm_info["model_output_dict"] = output_dict
         self.comm_info["model_input_dict"] = input_dict
 
@@ -304,7 +302,6 @@ class Trainer(TrainerBase):
             drop_last=len(train_data) > self.cfg.batch_size_val_per_gpu,
             persistent_workers=True,
         )
-
         return train_loader
 
     def build_val_loader(self):
@@ -333,7 +330,6 @@ class Trainer(TrainerBase):
         assert hasattr(self, "optimizer")
         assert hasattr(self, "train_loader")
         self.cfg.scheduler.total_steps = len(self.train_loader) * self.cfg.eval_epoch
-
         return build_scheduler(self.cfg.scheduler, self.optimizer)
 
     def build_scaler(self):
