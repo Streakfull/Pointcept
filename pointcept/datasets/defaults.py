@@ -58,12 +58,10 @@ class DefaultDataset(Dataset):
         if test_mode:
             self.test_voxelize = TRANSFORMS.build(self.test_cfg.voxelize)
             self.test_crop = (
-                TRANSFORMS.build(
-                    self.test_cfg.crop) if self.test_cfg.crop else None
+                TRANSFORMS.build(self.test_cfg.crop) if self.test_cfg.crop else None
             )
             self.post_transform = Compose(self.test_cfg.post_transform)
-            self.aug_transform = [Compose(aug)
-                                  for aug in self.test_cfg.aug_transform]
+            self.aug_transform = [Compose(aug) for aug in self.test_cfg.aug_transform]
 
         self.data_list = self.get_data_list()
         logger = get_root_logger()
@@ -74,25 +72,14 @@ class DefaultDataset(Dataset):
         )
 
     def get_data_list(self):
-        # self.exclude_ids = ["6115eddb86",
-        #                     "825d228aec", "5ee7c22ba0", "7b6477cb95", "31a2c91c43"]
-        # files = os.listdir("./exp/octformer_val/result/submit")
-        # files_without_txt = [file[:-4]
-        #                      for file in files if file.endswith('.txt')]
-        # self.exclude_ids = files_without_txt
-        self.exclude_ids = []
         if isinstance(self.split, str):
-            data_list = glob.glob(os.path.join(
-                self.data_root, self.split, "*"))
+            data_list = glob.glob(os.path.join(self.data_root, self.split, "*"))
         elif isinstance(self.split, Sequence):
             data_list = []
             for split in self.split:
                 data_list += glob.glob(os.path.join(self.data_root, split, "*"))
         else:
             raise NotImplementedError
-        if self.exclude_ids:
-            data_list = [item for item in data_list if not any(
-                id_str in item for id_str in self.exclude_ids)]
 
         return data_list
 
@@ -123,16 +110,14 @@ class DefaultDataset(Dataset):
             data_dict["normal"] = data_dict["normal"].astype(np.float32)
 
         if "segment" in data_dict.keys():
-            data_dict["segment"] = data_dict["segment"].reshape(
-                [-1]).astype(np.int32)
+            data_dict["segment"] = data_dict["segment"].reshape([-1]).astype(np.int32)
         else:
             data_dict["segment"] = (
                 np.ones(data_dict["coord"].shape[0], dtype=np.int32) * -1
             )
 
         if "instance" in data_dict.keys():
-            data_dict["instance"] = data_dict["instance"].reshape(
-                [-1]).astype(np.int32)
+            data_dict["instance"] = data_dict["instance"].reshape([-1]).astype(np.int32)
         else:
             data_dict["instance"] = (
                 np.ones(data_dict["coord"].shape[0], dtype=np.int32) * -1
@@ -211,8 +196,7 @@ class ConcatDataset(Dataset):
         for i in range(len(self.datasets)):
             data_list.extend(
                 zip(
-                    np.ones(len(self.datasets[i])) *
-                    i, np.arange(len(self.datasets[i]))
+                    np.ones(len(self.datasets[i])) * i, np.arange(len(self.datasets[i]))
                 )
             )
         return data_list

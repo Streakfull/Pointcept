@@ -10,7 +10,6 @@ import torch
 import torch.distributed as dist
 import pointops
 from uuid import uuid4
-import wandb
 
 import pointcept.utils.comm as comm
 from pointcept.utils.misc import intersection_and_union_gpu
@@ -58,14 +57,13 @@ class ClsEvaluator(HookBase):
             self.trainer.storage.put_scalar("val_intersection", intersection)
             self.trainer.storage.put_scalar("val_union", union)
             self.trainer.storage.put_scalar("val_target", target)
-            if (loss is not None):
-                self.trainer.storage.put_scalar("val_loss", loss.item())
-                self.trainer.logger.info(
-                    "Test: [{iter}/{max_iter}] "
-                    "Loss {loss:.4f} ".format(
-                        iter=i + 1, max_iter=len(self.trainer.val_loader), loss=loss.item()
-                    )
+            self.trainer.storage.put_scalar("val_loss", loss.item())
+            self.trainer.logger.info(
+                "Test: [{iter}/{max_iter}] "
+                "Loss {loss:.4f} ".format(
+                    iter=i + 1, max_iter=len(self.trainer.val_loader), loss=loss.item()
                 )
+            )
         loss_avg = self.trainer.storage.history("val_loss").avg
         intersection = self.trainer.storage.history("val_intersection").total
         union = self.trainer.storage.history("val_union").total
@@ -80,12 +78,7 @@ class ClsEvaluator(HookBase):
                 m_iou, m_acc, all_acc
             )
         )
-
-        current_epoch = self.trainer.epoch + 1
         for i in range(self.trainer.cfg.data.num_classes):
-            name = self.trainer.cfg.data.names[i]
-            self.trainer.writer.add_scalar(
-                f"val/cls_{i}-{name} Iou",  iou_class[i], current_epoch)
             self.trainer.logger.info(
                 "Class_{idx}-{name} Result: iou/accuracy {iou:.4f}/{accuracy:.4f}".format(
                     idx=i,
@@ -94,7 +87,7 @@ class ClsEvaluator(HookBase):
                     accuracy=acc_class[i],
                 )
             )
-
+        current_epoch = self.trainer.epoch + 1
         if self.trainer.writer is not None:
             self.trainer.writer.add_scalar("val/loss", loss_avg, current_epoch)
             self.trainer.writer.add_scalar("val/mIoU", m_iou, current_epoch)
@@ -114,22 +107,19 @@ class ClsEvaluator(HookBase):
         )
 
 
-@ HOOKS.register_module()
+@HOOKS.register_module()
 class SemSegEvaluator(HookBase):
     def after_epoch(self):
         if self.trainer.cfg.evaluate:
             self.eval()
 
     def eval(self):
-        self.trainer.logger.info(
-            ">>>>>>>>>>>>>>>> Start Evaluation Val >>>>>>>>>>>>>>>>")
+        self.trainer.logger.info(">>>>>>>>>>>>>>>> Start Evaluation Val >>>>>>>>>>>>>>>>")
         self.trainer.model.eval()
         for i, input_dict in enumerate(self.trainer.val_loader):
             for key in input_dict.keys():
                 if isinstance(input_dict[key], torch.Tensor):
                     input_dict[key] = input_dict[key].cuda(non_blocking=True)
-            # import pdb
-            # pdb.set_trace()
             with torch.no_grad():
                 # with torch.cuda.amp.autocast(enabled=self.trainer.cfg.enable_amp):
                 output_dict = self.trainer.model(input_dict)
@@ -231,7 +221,7 @@ class SemSegEvaluator(HookBase):
         )
 
 
-@ HOOKS.register_module()
+@HOOKS.register_module()
 class SemSegEvaluatorTrain(HookBase):
     def after_epoch(self):
         if self.trainer.cfg.evaluate:
@@ -280,16 +270,10 @@ class SemSegEvaluatorTrain(HookBase):
                 {"train/mIoU": m_iou, "train/mAcc": m_acc})
         self.trainer.logger.info(
             "<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
-        # save for saver
-       # self.trainer.comm_info["current_metric_value"] = m_iou
-        # save for saver
-       # self.trainer.comm_info["current_metric_name"] = "mIoU"
+
 
     def after_train(self):
         print("Train Evaluation Done")
-        # self.trainer.logger.info(
-        #     "Best {}: {:.4f}".format("mIoU", self.trainer.best_metric_value)
-        # )
 
 
 @HOOKS.register_module()

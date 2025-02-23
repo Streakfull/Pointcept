@@ -178,7 +178,6 @@ def default_setup(cfg):
         cfg.batch_size_test // world_size if cfg.batch_size_test is not None else 1
     )
     # update data loop
-
     assert cfg.epoch % cfg.eval_epoch == 0
     # settle random seed
     rank = comm.get_rank()
