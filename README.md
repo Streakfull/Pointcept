@@ -135,7 +135,7 @@ conda install ninja -y
 # Choose version you want here: https://pytorch.org/get-started/previous-versions/
 conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch -y
 conda install h5py pyyaml -c anaconda -y
-conda install sharedarray tensorboard tensorboardx yapf addict einops scipy plyfile termcolor timm -c conda-forge wandb -y
+conda install sharedarray tensorboard tensorboardx yapf addict einops scipy plyfile termcolor timm wandb -c conda-forge -y
 conda install pytorch-cluster pytorch-scatter pytorch-sparse -c pyg -y
 pip install torch-geometric
 
