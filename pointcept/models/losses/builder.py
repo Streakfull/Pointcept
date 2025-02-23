@@ -23,7 +23,6 @@ class Criteria(object):
             return pred
         loss = 0
         for c in self.criteria:
-
             loss += c(pred, target)
         return loss
 

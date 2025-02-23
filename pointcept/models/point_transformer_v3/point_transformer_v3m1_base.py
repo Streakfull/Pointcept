@@ -14,11 +14,7 @@ import spconv.pytorch as spconv
 import torch_scatter
 from timm.models.layers import DropPath
 try:
-
     import flash_attn
-    print("flash attn found")
-
-
 except ImportError:
     flash_attn = None
 
@@ -45,8 +41,7 @@ class RPE(torch.nn.Module):
         idx = (
             coord.clamp(-self.pos_bnd, self.pos_bnd)  # clamp into bnd
             + self.pos_bnd  # relative position to positive index
-            + torch.arange(3, device=coord.device) * \
-            self.rpe_num  # x, y, z stride
+            + torch.arange(3, device=coord.device) * self.rpe_num  # x, y, z stride
         )
         out = self.rpe_table.index_select(0, idx.reshape(-1))
         out = out.view(idx.shape + (-1,)).sum(3)
@@ -90,7 +85,6 @@ class SerializedAttention(PointModule):
             assert (
                 upcast_softmax is False
             ), "Set upcast_softmax to False when enable Flash Attention"
-
             assert flash_attn is not None, "Make sure flash_attn is installed."
             self.patch_size = patch_size
             self.attn_drop = attn_drop
@@ -115,8 +109,7 @@ class SerializedAttention(PointModule):
         if rel_pos_key not in point.keys():
             grid_coord = point.grid_coord[order]
             grid_coord = grid_coord.reshape(-1, K, 3)
-            point[rel_pos_key] = grid_coord.unsqueeze(
-                2) - grid_coord.unsqueeze(1)
+            point[rel_pos_key] = grid_coord.unsqueeze(2) - grid_coord.unsqueeze(1)
         return point[rel_pos_key]
 
     @torch.no_grad()
@@ -143,27 +136,24 @@ class SerializedAttention(PointModule):
             mask_pad = bincount > self.patch_size
             bincount_pad = ~mask_pad * bincount + mask_pad * bincount_pad
             _offset = nn.functional.pad(offset, (1, 0))
-            _offset_pad = nn.functional.pad(
-                torch.cumsum(bincount_pad, dim=0), (1, 0))
+            _offset_pad = nn.functional.pad(torch.cumsum(bincount_pad, dim=0), (1, 0))
             pad = torch.arange(_offset_pad[-1], device=offset.device)
             unpad = torch.arange(_offset[-1], device=offset.device)
             cu_seqlens = []
             for i in range(len(offset)):
-                unpad[_offset[i]: _offset[i + 1]
-                      ] += _offset_pad[i] - _offset[i]
+                unpad[_offset[i]: _offset[i + 1]] += _offset_pad[i] - _offset[i]
                 if bincount[i] != bincount_pad[i]:
                     pad[
                         _offset_pad[i + 1]
                         - self.patch_size
-                        + (bincount[i] % self.patch_size): _offset_pad[i + 1]
+                        + (bincount[i] % self.patch_size) : _offset_pad[i + 1]
                     ] = pad[
                         _offset_pad[i + 1]
                         - 2 * self.patch_size
-                        + (bincount[i] % self.patch_size): _offset_pad[i + 1]
+                        + (bincount[i] % self.patch_size) : _offset_pad[i + 1]
                         - self.patch_size
                     ]
-                pad[_offset_pad[i]: _offset_pad[i + 1]
-                    ] -= _offset_pad[i] - _offset[i]
+                pad[_offset_pad[i]: _offset_pad[i + 1]] -= _offset_pad[i] - _offset[i]
                 cu_seqlens.append(
                     torch.arange(
                         _offset_pad[i],
@@ -183,8 +173,7 @@ class SerializedAttention(PointModule):
     def forward(self, point):
         if not self.enable_flash:
             self.patch_size = min(
-                offset2bincount(point.offset).min(
-                ).tolist(), self.patch_size_max
+                offset2bincount(point.offset).min().tolist(), self.patch_size_max
             )
 
         H = self.num_heads
@@ -202,8 +191,7 @@ class SerializedAttention(PointModule):
         if not self.enable_flash:
             # encode and reshape qkv: (N', K, 3, H, C') => (3, N', H, K, C')
             q, k, v = (
-                qkv.reshape(-1, K, 3, H, C // H).permute(2,
-                                                         0, 3, 1, 4).unbind(dim=0)
+                qkv.reshape(-1, K, 3, H, C // H).permute(2, 0, 3, 1, 4).unbind(dim=0)
             )
             # attn
             if self.upcast_attention:
@@ -347,8 +335,7 @@ class Block(PointModule):
         point.feat = shortcut + point.feat
         if not self.pre_norm:
             point = self.norm2(point)
-        point.sparse_conv_feat = point.sparse_conv_feat.replace_feature(
-            point.feat)
+        point.sparse_conv_feat = point.sparse_conv_feat.replace_feature(point.feat)
         return point
 
 
@@ -470,8 +457,7 @@ class SerializedUnpooling(PointModule):
     ):
         super().__init__()
         self.proj = PointSequential(nn.Linear(in_channels, out_channels))
-        self.proj_skip = PointSequential(
-            nn.Linear(skip_channels, out_channels))
+        self.proj_skip = PointSequential(nn.Linear(skip_channels, out_channels))
 
         if norm_layer is not None:
             self.proj.add(norm_layer(out_channels))
@@ -597,8 +583,7 @@ class PointTransformerV3(PointModule):
         if pdnorm_ln:
             ln_layer = partial(
                 PDNorm,
-                norm_layer=partial(
-                    nn.LayerNorm, elementwise_affine=pdnorm_affine),
+                norm_layer=partial(nn.LayerNorm, elementwise_affine=pdnorm_affine),
                 conditions=pdnorm_conditions,
                 decouple=pdnorm_decouple,
                 adaptive=pdnorm_adaptive,
@@ -622,7 +607,7 @@ class PointTransformerV3(PointModule):
         self.enc = PointSequential()
         for s in range(self.num_stages):
             enc_drop_path_ = enc_drop_path[
-                sum(enc_depths[:s]): sum(enc_depths[: s + 1])
+                sum(enc_depths[:s]) : sum(enc_depths[: s + 1])
             ]
             enc = PointSequential()
             if s > 0:
@@ -672,7 +657,7 @@ class PointTransformerV3(PointModule):
             dec_channels = list(dec_channels) + [enc_channels[-1]]
             for s in reversed(range(self.num_stages - 1)):
                 dec_drop_path_ = dec_drop_path[
-                    sum(dec_depths[:s]): sum(dec_depths[: s + 1])
+                    sum(dec_depths[:s]) : sum(dec_depths[: s + 1])
                 ]
                 dec_drop_path_.reverse()
                 dec = PointSequential()
@@ -714,8 +699,7 @@ class PointTransformerV3(PointModule):
 
     def forward(self, data_dict):
         point = Point(data_dict)
-        point.serialization(
-            order=self.order, shuffle_orders=self.shuffle_orders)
+        point.serialization(order=self.order, shuffle_orders=self.shuffle_orders)
         point.sparsify()
 
         point = self.embedding(point)

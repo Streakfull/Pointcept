@@ -39,7 +39,6 @@ class Wandb():
                    tags=self.tags,
                    config=self.cfg,
                    name=self.cfg.run_name)
-        wandb.log({"Test/Log": 500}, step=0)
 
     def log(self, data_dict):
         if not self.enabled:

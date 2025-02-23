@@ -49,8 +49,7 @@ def _lovasz_hinge(logits, labels, per_image=True, ignore=None):
             for log, lab in zip(logits, labels)
         )
     else:
-        loss = _lovasz_hinge_flat(
-            *_flatten_binary_scores(logits, labels, ignore))
+        loss = _lovasz_hinge_flat(*_flatten_binary_scores(logits, labels, ignore))
     return loss
 
 
@@ -137,8 +136,7 @@ def _lovasz_softmax_flat(probas, labels, classes="present", class_seen=None):
                 continue
             if C == 1:
                 if len(classes) > 1:
-                    raise ValueError(
-                        "Sigmoid output possible only with 1 class")
+                    raise ValueError("Sigmoid output possible only with 1 class")
                 class_pred = probas[:, 0]
             else:
                 class_pred = probas[:, c]
@@ -154,8 +152,7 @@ def _lovasz_softmax_flat(probas, labels, classes="present", class_seen=None):
                     continue
                 if C == 1:
                     if len(classes) > 1:
-                        raise ValueError(
-                            "Sigmoid output possible only with 1 class")
+                        raise ValueError("Sigmoid output possible only with 1 class")
                     class_pred = probas[:, 0]
                 else:
                     class_pred = probas[:, c]
@@ -163,8 +160,7 @@ def _lovasz_softmax_flat(probas, labels, classes="present", class_seen=None):
                 errors_sorted, perm = torch.sort(errors, 0, descending=True)
                 perm = perm.data
                 fg_sorted = fg[perm]
-                losses.append(
-                    torch.dot(errors_sorted, _lovasz_grad(fg_sorted)))
+                losses.append(torch.dot(errors_sorted, _lovasz_grad(fg_sorted)))
     return mean(losses)
 
 
@@ -176,16 +172,13 @@ def _flatten_probas(probas, labels, ignore=None):
         probas = probas.view(B, 1, H, W)
 
     C = probas.size(1)
-    # [B, C, Di, Dj, ...] -> [B, Di, Dj, ..., C]
-    probas = torch.movedim(probas, 1, -1)
+    probas = torch.movedim(probas, 1, -1)  # [B, C, Di, Dj, ...] -> [B, Di, Dj, ..., C]
     probas = probas.contiguous().view(-1, C)  # [P, C]
 
     labels = labels.view(-1)
     if ignore is None:
         return probas, labels
     valid = labels != ignore
-    # import pdb
-    # pdb.set_trace()
     vprobas = probas[valid]
     vlabels = labels[valid]
     return vprobas, vlabels

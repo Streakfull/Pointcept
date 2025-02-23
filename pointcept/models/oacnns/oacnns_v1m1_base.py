@@ -52,8 +52,7 @@ class BasicBlock(nn.Module):
                     nn.ReLU(),
                 )
             )
-            self.weight.append(
-                nn.Linear(embed_channels, embed_channels, bias=False))
+            self.weight.append(nn.Linear(embed_channels, embed_channels, bias=False))
 
         self.adaptive = nn.Linear(embed_channels, depth - 1, bias=False)
         self.fuse = nn.Sequential(
@@ -94,8 +93,7 @@ class BasicBlock(nn.Module):
             pw = pw - scatter(pw, cluster, reduce="mean")[cluster]
             pw = self.weight[i](pw)
             pw = torch.exp(pw - pw.max())
-            pw = pw / (scatter(pw, cluster, reduce="sum", dim=0)
-                       [cluster] + 1e-6)
+            pw = pw / (scatter(pw, cluster, reduce="sum", dim=0)[cluster] + 1e-6)
             pfeat = self.proj[i](feat) * pw
             pfeat = scatter(pfeat, cluster, reduce="sum")[cluster]
             feats.append(pfeat)
@@ -208,9 +206,7 @@ class UpBlock(nn.Module):
     def forward(self, x, skip_x):
         x = self.up(x)
         x = x.replace_feature(
-            self.fuse(
-                torch.cat([x.features, skip_x.features], dim=1)) + x.features
-        )
+            self.fuse(torch.cat([x.features, skip_x.features], dim=1)) + x.features)
         return x
 
 
@@ -302,8 +298,7 @@ class OACNNs(nn.Module):
                 )
             )
 
-        self.final = spconv.SubMConv3d(
-            dec_channels[0], num_classes, kernel_size=1)
+        self.final = spconv.SubMConv3d(dec_channels[0], num_classes, kernel_size=1)
         self.apply(self._init_weights)
 
     def forward(self, input_dict):

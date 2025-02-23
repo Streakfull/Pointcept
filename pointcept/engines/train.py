@@ -72,7 +72,6 @@ class TrainerBase:
                     self.comm_info["iter"],
                     self.comm_info["input_dict"],
                 ) in self.data_iterator:
-
                     # => before_step
                     self.before_step()
                     # => run_step
@@ -148,30 +147,30 @@ class Trainer(TrainerBase):
         self.scaler = self.build_scaler()
         self.logger.info("=> Building hooks ...")
         self.register_hooks(self.cfg.hooks)
-        wandb_project_name = cfg["wandb_project_name"]
-        wandb_tags = cfg["wandb_tags"]
-        self.enable_wandb = cfg["enable_wandb"]
-        self.use_step_logging = cfg["use_step_logging"]
-        self.log_every = cfg["log_every"]
-        self.wandb = Wandb(self.enable_wandb, wandb_project_name,
-                           self.logger, tags=wandb_tags, cfg=wandb_cfg,
-                           use_step_logging=self.use_step_logging,
-                           print_every=self.log_every
-                           )
+        self.init_wandb(cfg, wandb_cfg)
+
+    def init_wandb(self, cfg, wandb_cfg):
+        wandb_project_name = cfg.get("wandb_project_name", "default_project")
+        wandb_tags = cfg.get("wandb_tags", [])
+        self.enable_wandb = cfg.get("enable_wandb", False)
+        self.use_step_logging = cfg.get("use_step_logging", False)
+        self.log_every = cfg.get("log_every", 500)  # Default log every 10 steps if enabled
+
+        self.wandb = Wandb(
+            self.enable_wandb, wandb_project_name, self.logger,
+            tags=wandb_tags, cfg=wandb_cfg,
+            use_step_logging=self.use_step_logging,
+            print_every=self.log_every
+        )
+
         self.wandb.init()
-        # if (self.enable_wandb):
-        #     wandb.init(project=wandb_project_name,
-        #                tags=wandb_tags, config=wandb_cfg)
-        #     wandb.log({"Test/Log": 500}, step=0)
         self.global_step = 0
-        self.log_every = 50
 
     def train(self):
         with EventStorage() as self.storage, ExceptionWriter():
             # => before train
             self.before_train()
-            self.logger.info(
-                ">>>>>>>>>>>>>>>> Start Training >>>>>>>>>>>>>>>>")
+            self.logger.info(">>>>>>>>>>>>>>>> Start Training >>>>>>>>>>>>>>>>")
             for self.epoch in range(self.start_epoch, self.max_epoch):
                 # => before epoch
                 # TODO: optimize to iteration based
@@ -181,7 +180,6 @@ class Trainer(TrainerBase):
                 self.model.train()
                 self.data_iterator = enumerate(self.train_loader)
                 self.before_epoch()
-                # self.after_epoch()
                 # => run_epoch
                 for (
                     self.comm_info["iter"],
@@ -196,26 +194,9 @@ class Trainer(TrainerBase):
                     self.global_step += 1
                     self.wandb.set_global_step(self.global_step)
                 # => after epoch
-
                 self.after_epoch()
             # => after train
             self.after_train()
-
-    # def train2(self):
-    #     with EventStorage() as self.storage, ExceptionWriter():
-    #         # => before train
-    #         self.before_train()
-    #         self.logger.info(
-    #             ">>>>>>>>>>>>>>>> Start Training >>>>>>>>>>>>>>>>")
-    #         for self.epoch in range(self.start_epoch, self.max_epoch):
-    #             # => before epoch
-    #             # TODO: optimize to iteration based
-    #             if comm.get_world_size() > 1:
-    #                 self.train_loader.sampler.set_epoch(self.epoch)
-    #             self.model.train()
-    #             self.data_iterator = enumerate(self.train_loader)
-    #             self.before_epoch()
-    #             self.after_epoch()
 
     def run_step(self):
         input_dict = self.comm_info["input_dict"]
@@ -224,15 +205,13 @@ class Trainer(TrainerBase):
                 input_dict[key] = input_dict[key].cuda(non_blocking=True)
         with torch.cuda.amp.autocast(enabled=self.cfg.enable_amp):
             seg = input_dict["segment"]
+            ignore_index = self.cfg["data"].get("ignore_index", -1)
             unique = torch.unique(seg)
-            if (len(unique) == 1 and unique[0] == -1):
-                print("Step Skipped")
+            if (len(unique) == 1 and unique[0] == ignore_index):
+                self.logger.info(f"Step {self.global_step} skipped")
                 return
-            # import pdb
-            # pdb.set_trace()
             output_dict = self.model(input_dict)
             loss = output_dict["loss"]
-
         self.optimizer.zero_grad()
         if self.cfg.enable_amp:
             self.scaler.scale(loss).backward()
@@ -247,7 +226,6 @@ class Trainer(TrainerBase):
             # Fix torch warning scheduler step before optimizer step.
             scaler = self.scaler.get_scale()
             self.scaler.update()
-            # self.scheduler.step()
             if scaler <= self.scaler.get_scale():
                 self.scheduler.step()
         else:
@@ -263,7 +241,7 @@ class Trainer(TrainerBase):
 
         self.comm_info["model_output_dict"] = output_dict
         self.comm_info["model_input_dict"] = input_dict
-        # Add All Eval metrics here
+
 
     def after_epoch(self):
         for h in self.hooks:
@@ -276,8 +254,7 @@ class Trainer(TrainerBase):
         model = build_model(self.cfg.model)
         if self.cfg.sync_bn:
             model = nn.SyncBatchNorm.convert_sync_batchnorm(model)
-        n_parameters = sum(p.numel()
-                           for p in model.parameters() if p.requires_grad)
+        n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
         # logger.info(f"Model: \n{self.model}")
         self.logger.info(f"Num params: {n_parameters}")
         model = create_ddp_model(
@@ -288,18 +265,15 @@ class Trainer(TrainerBase):
         return model
 
     def build_writer(self):
-        writer = SummaryWriter(
-            self.cfg.save_path) if comm.is_main_process() else None
-        self.logger.info(
-            f"Tensorboard writer logging dir: {self.cfg.save_path}")
+        writer = SummaryWriter(self.cfg.save_path) if comm.is_main_process() else None
+        self.logger.info(f"Tensorboard writer logging dir: {self.cfg.save_path}")
         return writer
 
     def build_train_loader(self):
         train_data = build_dataset(self.cfg.data.train)
 
         if comm.get_world_size() > 1:
-            train_sampler = torch.utils.data.distributed.DistributedSampler(
-                train_data)
+            train_sampler = torch.utils.data.distributed.DistributedSampler(train_data)
         else:
             train_sampler = None
 
@@ -318,14 +292,12 @@ class Trainer(TrainerBase):
             train_data,
             batch_size=self.cfg.batch_size_per_gpu,
             shuffle=(train_sampler is None),
-            # shuffle=False,
             num_workers=self.cfg.num_worker_per_gpu,
             sampler=train_sampler,
             collate_fn=partial(point_collate_fn, mix_prob=self.cfg.mix_prob),
             pin_memory=True,
             worker_init_fn=init_fn,
-            # drop_last=len(train_data) > self.cfg.batch_size_val_per_gpu,
-            drop_last=False,
+            drop_last=len(train_data) > self.cfg.batch_size_val_per_gpu,
             persistent_workers=True,
         )
 
@@ -336,8 +308,7 @@ class Trainer(TrainerBase):
         if self.cfg.evaluate:
             val_data = build_dataset(self.cfg.data.val)
             if comm.get_world_size() > 1:
-                val_sampler = torch.utils.data.distributed.DistributedSampler(
-                    val_data)
+                val_sampler = torch.utils.data.distributed.DistributedSampler(val_data)
             else:
                 val_sampler = None
             val_loader = torch.utils.data.DataLoader(
@@ -357,8 +328,7 @@ class Trainer(TrainerBase):
     def build_scheduler(self):
         assert hasattr(self, "optimizer")
         assert hasattr(self, "train_loader")
-        self.cfg.scheduler.total_steps = len(
-            self.train_loader) * self.cfg.eval_epoch
+        self.cfg.scheduler.total_steps = len(self.train_loader) * self.cfg.eval_epoch
 
         return build_scheduler(self.cfg.scheduler, self.optimizer)
 
@@ -366,13 +336,9 @@ class Trainer(TrainerBase):
         scaler = torch.cuda.amp.GradScaler() if self.cfg.enable_amp else None
         return scaler
 
-    def is_log(self):
-        return self.global_step % (self.log_every - 1)
-
 
 @TRAINERS.register_module("MultiDatasetTrainer")
 class MultiDatasetTrainer(Trainer):
-
     def build_train_loader(self):
         from pointcept.datasets import MultiDatasetDataloader
 
