@@ -204,10 +204,8 @@ class SemSegEvaluator(HookBase):
             self.trainer.writer.add_scalar("val/mAcc", m_acc, current_epoch)
             self.trainer.writer.add_scalar("val/allAcc", all_acc, current_epoch)
         self.trainer.logger.info("<<<<<<<<<<<<<<<<< End Evaluation <<<<<<<<<<<<<<<<<")
-        # save for saver
-        self.trainer.comm_info["current_metric_value"] = m_iou
-        # save for saver
-        self.trainer.comm_info["current_metric_name"] = "mIoU"
+        self.trainer.comm_info["current_metric_value"] = m_iou  # save for saver
+        self.trainer.comm_info["current_metric_name"] = "mIoU"  # save for saver
 
     def after_train(self):
         self.trainer.logger.info(
