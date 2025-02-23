@@ -10,10 +10,6 @@ mix_prob = 0.8
 empty_cache = False
 enable_amp = True
 enable_wandb = False
-wandb_project_name = "ptV3"
-wandb_tags = ["Full Train"]
-use_step_logging = True
-log_every = 500
 
 # model settings
 model = dict(
