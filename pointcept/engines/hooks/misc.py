@@ -119,8 +119,7 @@ class InformationWriter(HookBase):
             union.cpu().numpy(),
             target.cpu().numpy(),
         )
-        self.trainer.storage.put_scalar(
-            "train_intersection", intersection)
+        self.trainer.storage.put_scalar("train_intersection", intersection)
         self.trainer.storage.put_scalar("train_union", union)
         self.trainer.storage.put_scalar("train_target", target)
 
@@ -129,14 +128,13 @@ class InformationWriter(HookBase):
             model_output_dict = self.trainer.comm_info["model_output_dict"]
             if "model_input_dict" in self.trainer.comm_info.keys():
                 model_input_dict = self.trainer.comm_info["model_input_dict"]
-                self.record_forward_metrics(
-                    model_output_dict, model_input_dict)
+                self.record_forward_metrics(model_output_dict, model_input_dict)
 
             self.model_output_keys = [
-                key for key in model_output_dict.keys() if "logits" not in key]
+                key for key in model_output_dict.keys() if "logits" not in key
+            ]
             for key in self.model_output_keys:
-                self.trainer.storage.put_scalar(
-                    key, model_output_dict[key].item())
+                self.trainer.storage.put_scalar(key, model_output_dict[key].item())
 
         for key in self.model_output_keys:
             self.trainer.comm_info["iter_info"] += "{key}: {value:.4f} ".format(
@@ -157,8 +155,7 @@ class InformationWriter(HookBase):
                     val,
                     self.curr_iter,
                 )
-                self.trainer.wandb.log(
-                    {f"batch/{key}": val})
+                self.trainer.wandb.log({f"batch/{key}": val})
                 self.trainer.wandb.add_to_running_metrics(key, val)
 
     def after_epoch(self):
@@ -177,7 +174,8 @@ class InformationWriter(HookBase):
                 )
 
                 self.trainer.wandb.log(
-                    {f"train/{key}": self.trainer.storage.history(key).val})
+                    {f"train/{key}": self.trainer.storage.history(key).val}
+                )
 
 
 @HOOKS.register_module()

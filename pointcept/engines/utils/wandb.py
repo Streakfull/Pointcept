@@ -2,16 +2,17 @@ import wandb
 import numpy as np
 
 
-class Wandb():
-    def __init__(self,
-                 enabled,
-                 project_name,
-                 logger,
-                 tags=[],
-                 cfg={},
-                 use_step_logging=False,
-                 print_every=10
-                 ):
+class Wandb:
+    def __init__(
+        self,
+        enabled,
+        project_name,
+        logger,
+        tags=[],
+        cfg={},
+        use_step_logging=False,
+        print_every=10,
+    ):
         self.global_step = 0
         self.epoch = 0
         self.enabled = enabled
@@ -27,7 +28,7 @@ class Wandb():
         self.epoch = epoch + 1
 
     def set_global_step(self, global_step):
-        self.global_step = global_step+1
+        self.global_step = global_step + 1
         if self.global_step % self.print_every == 0:
             self.log_running_metrics()
 
@@ -35,10 +36,12 @@ class Wandb():
         if not self.enabled:
             self.logger.info("Wandb not enabled")
             return None
-        wandb.init(project=self.project_name,
-                   tags=self.tags,
-                   config=self.cfg,
-                   name=self.cfg.run_name)
+        wandb.init(
+            project=self.project_name,
+            tags=self.tags,
+            config=self.cfg,
+            name=self.cfg.run_name,
+        )
 
     def log(self, data_dict):
         if not self.enabled:

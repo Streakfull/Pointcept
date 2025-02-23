@@ -116,14 +116,15 @@ def default_save_dir():
         str: Generated directory name.
     """
     # Fetch SLURM environment variables
-    slurm_id = os.getenv('SLURM_JOB_ID')
-    slurm_name = os.getenv('SLURM_JOB_NAME')
+    slurm_id = os.getenv("SLURM_JOB_ID")
+    slurm_name = os.getenv("SLURM_JOB_NAME")
 
     # Generate a random string
-    random_str = ''.join(np.random.choice(
-        list(string.ascii_uppercase + string.digits), size=5))
+    random_str = "".join(
+        np.random.choice(list(string.ascii_uppercase + string.digits), size=5)
+    )
 
-    if slurm_name == 'interactive':
+    if slurm_name == "interactive":
         # If in an interactive SLURM session, include 'interactive' in the name
         return f"{slurm_id}_interactive_{random_str}"
 
@@ -141,7 +142,7 @@ def default_config_parser(file_path, options):
         cfg = Config.fromfile(file_path)
     else:
         sep = file_path.find("-")
-        cfg = Config.fromfile(os.path.join(file_path[:sep], file_path[sep + 1:]))
+        cfg = Config.fromfile(os.path.join(file_path[:sep], file_path[sep + 1 :]))
 
     if options is not None:
         cfg.merge_from_dict(options)

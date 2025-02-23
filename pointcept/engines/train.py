@@ -155,17 +155,21 @@ class Trainer(TrainerBase):
         wandb_tags = cfg.get("wandb_tags", [])
         self.enable_wandb = cfg.get("enable_wandb", False)
         self.use_step_logging = cfg.get("use_step_logging", False)
-        self.log_every = cfg.get("log_every", 500)  # Default log every 10 steps if enabled
+        self.log_every = cfg.get(
+            "log_every", 500
+        )  # Default log every 10 steps if enabled
 
         self.wandb = Wandb(
-            self.enable_wandb, wandb_project_name, self.logger,
-            tags=wandb_tags, cfg=wandb_cfg,
+            self.enable_wandb,
+            wandb_project_name,
+            self.logger,
+            tags=wandb_tags,
+            cfg=wandb_cfg,
             use_step_logging=self.use_step_logging,
-            print_every=self.log_every
+            print_every=self.log_every,
         )
 
         self.wandb.init()
- 
 
     def train(self):
         with EventStorage() as self.storage, ExceptionWriter():
@@ -208,7 +212,7 @@ class Trainer(TrainerBase):
             seg = input_dict["segment"]
             ignore_index = self.cfg["data"].get("ignore_index", -1)
             unique = torch.unique(seg)
-            if (len(unique) == 1 and unique[0] == ignore_index):
+            if len(unique) == 1 and unique[0] == ignore_index:
                 self.logger.info(f"Step {self.global_step} skipped")
                 return
             output_dict = self.model(input_dict)
@@ -242,7 +246,6 @@ class Trainer(TrainerBase):
 
         self.comm_info["model_output_dict"] = output_dict
         self.comm_info["model_input_dict"] = input_dict
-
 
     def after_epoch(self):
         for h in self.hooks:
