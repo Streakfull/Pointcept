@@ -10,7 +10,6 @@ mix_prob = 0.8
 empty_cache = False
 enable_amp = True
 
-
 # model settings
 model = dict(
     type="DefaultSegmentorV2",
