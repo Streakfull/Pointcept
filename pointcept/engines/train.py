@@ -272,7 +272,6 @@ class Trainer(TrainerBase):
             drop_last=len(train_data) > self.cfg.batch_size_val_per_gpu,
             persistent_workers=True,
         )
-
         return train_loader
 
     def build_val_loader(self):

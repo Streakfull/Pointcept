@@ -7,7 +7,6 @@ Please cite our work if the code is helpful to you.
 
 import sys
 import glob
-import random
 import os
 import shutil
 import time
@@ -24,7 +23,7 @@ from pointcept.utils.comm import is_main_process, synchronize, get_world_size
 from pointcept.utils.cache import shared_dict
 import pointcept.utils.comm as comm
 from pointcept.engines.test import TESTERS
-from pointcept.utils.misc import intersection_and_union_gpu
+
 from .default import HookBase
 from .builder import HOOKS
 
@@ -106,6 +105,7 @@ class InformationWriter(HookBase):
     def after_step(self):
         if "model_output_dict" in self.trainer.comm_info.keys():
             model_output_dict = self.trainer.comm_info["model_output_dict"]
+            self.model_output_keys = model_output_dict.keys()
 
             for key in self.model_output_keys:
                 self.trainer.storage.put_scalar(key, model_output_dict[key].item())
@@ -114,7 +114,6 @@ class InformationWriter(HookBase):
             self.trainer.comm_info["iter_info"] += "{key}: {value:.4f} ".format(
                 key=key, value=self.trainer.storage.history(key).val
             )
-
         lr = self.trainer.optimizer.state_dict()["param_groups"][0]["lr"]
         self.trainer.comm_info["iter_info"] += "Lr: {lr:.5f}".format(lr=lr)
         self.trainer.logger.info(self.trainer.comm_info["iter_info"])
@@ -122,7 +121,6 @@ class InformationWriter(HookBase):
         if self.trainer.writer is not None:
             self.trainer.writer.add_scalar("lr", lr, self.curr_iter)
             for key in self.model_output_keys:
-                val = self.trainer.storage.history(key).val
                 self.trainer.writer.add_scalar(
                     "train_batch/" + key,
                     self.trainer.storage.history(key).val,
