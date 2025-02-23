@@ -4,7 +4,7 @@ _base_ = [
 ]
 
 
-batch_size = 8  # bs: total bs in all gpus
+batch_size = 12  # bs: total bs in all gpus
 num_worker = 24
 mix_prob = 0.8
 empty_cache = False
@@ -50,8 +50,7 @@ param_dicts = [dict(keyword="blocks", lr=0.00015)]
 
 
 dataset_type = "ScanNetPPDataset"
-# data_root = "data/scannetpp"
-data_root = "./raw_dataset"
+data_root = "data/scannetpp"
 
 
 data = dict(

@@ -4,7 +4,7 @@ _base_ = [
 ]
 
 
-batch_size = 4  # bs: total bs in all gpus
+batch_size = 12  # bs: total bs in all gpus
 num_worker = 24
 mix_prob = 0.8
 empty_cache = False
@@ -72,9 +72,9 @@ scheduler = dict(
     final_div_factor=1000.0,
 )
 
+# dataset settings
 dataset_type = "ScanNetPPDataset"
-# data_root = "data/scannetpp"
-data_root = "./raw_dataset"
+data_root = "data/scannetpp"
 
 
 data = dict(

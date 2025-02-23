@@ -58,8 +58,7 @@ scheduler = dict(
 
 # dataset settings
 dataset_type = "ScanNetPPDataset"
-# data_root = "data/scannetpp"
-data_root = "./raw_dataset"
+data_root = "data/scannetpp"
 
 data = dict(
     num_classes=100,
