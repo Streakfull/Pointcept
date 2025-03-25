@@ -36,10 +36,7 @@ model = dict(
         octree_depth=11,
         octree_full_depth=2,
     ),
-    criteria=[
-        dict(type="CrossEntropyLoss", loss_weight=1.0, ignore_index=-1),
-        dict(type="LovaszLoss", mode="multiclass", loss_weight=1.0, ignore_index=-1),
-    ],
+    criteria=[dict(type="CrossEntropyLoss", loss_weight=1.0, ignore_index=-1)],
 )
 
 # scheduler settings
@@ -139,7 +136,7 @@ data = dict(
     ),
     test=dict(
         type=dataset_type,
-        split="test",
+        split="val",
         data_root=data_root,
         transform=[
             dict(type="CenterShift", apply_z=True),
@@ -152,7 +149,6 @@ data = dict(
                 grid_size=0.01,
                 hash_type="fnv",
                 mode="test",
-                keys=("coord", "color", "normal"),
                 return_displacement=True,
                 project_displacement=True,
             ),
@@ -288,14 +284,3 @@ data = dict(
         ),
     ),
 )
-
-# hook
-hooks = [
-    dict(type="CheckpointLoader"),
-    dict(type="IterationTimer", warmup_iter=2),
-    dict(type="InformationWriter"),
-    dict(type="SemSegEvaluator"),
-    dict(type="CheckpointSaver", save_freq=None),
-    dict(type="PreciseEvaluator", test_last=False),
-    dict(type="SemSegEvaluatorTrain"),
-]

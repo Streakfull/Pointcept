@@ -52,10 +52,7 @@ model = dict(
         pdnorm_affine=True,
         pdnorm_conditions=("ScanNet", "S3DIS", "Structured3D"),
     ),
-    criteria=[
-        dict(type="CrossEntropyLoss", loss_weight=1.0, ignore_index=-1),
-        dict(type="LovaszLoss", mode="multiclass", loss_weight=1.0, ignore_index=-1),
-    ],
+    criteria=[dict(type="CrossEntropyLoss", loss_weight=1.0, ignore_index=-1)],
     num_classes=100,
     backbone_out_channels=64,
     cos_temp=15,
@@ -156,7 +153,7 @@ data = dict(
     ),
     test=dict(
         type=dataset_type,
-        split="test",
+        split="val",
         data_root=data_root,
         transform=[
             dict(type="CenterShift", apply_z=True),
@@ -167,7 +164,6 @@ data = dict(
                 grid_size=0.01,
                 hash_type="fnv",
                 mode="train",
-                keys=("coord", "color", "normal", "segment"),
                 return_inverse=True,
             ),
         ],
@@ -178,7 +174,6 @@ data = dict(
                 grid_size=0.02,
                 hash_type="fnv",
                 mode="test",
-                keys=("coord", "color", "normal"),
                 return_grid_coord=True,
             ),
             crop=None,
@@ -313,14 +308,3 @@ data = dict(
         ),
     ),
 )
-
-# hook
-hooks = [
-    dict(type="CheckpointLoader"),
-    dict(type="IterationTimer", warmup_iter=2),
-    dict(type="InformationWriter"),
-    dict(type="SemSegEvaluator"),
-    dict(type="CheckpointSaver", save_freq=None),
-    dict(type="PreciseEvaluator", test_last=False),
-    dict(type="SemSegEvaluatorTrain"),
-]
