@@ -77,14 +77,12 @@ param_dicts = [dict(keyword="block", lr=0.0006)]
 dataset_type = "ScanNetPPDataset"
 data_root = "data/scannetpp"
 
-
 data = dict(
     num_classes=100,
     ignore_index=-1,
     train=dict(
         type=dataset_type,
         split="train_grid1mm_chunk6x6_stride3x3",
-        # split="train",
         data_root=data_root,
         transform=[
             dict(type="CenterShift", apply_z=True),

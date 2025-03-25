@@ -63,7 +63,6 @@ scheduler = dict(
 dataset_type = "ScanNetPPDataset"
 data_root = "data/scannetpp"
 
-
 data = dict(
     num_classes=100,
     ignore_index=-1,
