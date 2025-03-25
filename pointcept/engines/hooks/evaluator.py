@@ -155,23 +155,18 @@ class SemSegEvaluator(HookBase):
             self.trainer.storage.put_scalar("val_intersection", intersection)
             self.trainer.storage.put_scalar("val_union", union)
             self.trainer.storage.put_scalar("val_target", target)
-            self.trainer.storage.put_scalar(
-                "val_loss", loss.item() if loss is not None else 0
-            )
+            self.trainer.storage.put_scalar("val_loss", loss.item())
             info = "Test: [{iter}/{max_iter}] ".format(
                 iter=i + 1, max_iter=len(self.trainer.val_loader)
             )
             if "origin_coord" in input_dict.keys():
                 info = "Interp. " + info
-            if loss is not None:
-                self.trainer.logger.info(
-                    info
-                    + "Loss {loss:.4f} ".format(
-                        iter=i + 1,
-                        max_iter=len(self.trainer.val_loader),
-                        loss=loss.item(),
-                    )
+            self.trainer.logger.info(
+                info
+                + "Loss {loss:.4f} ".format(
+                    iter=i + 1, max_iter=len(self.trainer.val_loader), loss=loss.item()
                 )
+            )
         loss_avg = self.trainer.storage.history("val_loss").avg
         intersection = self.trainer.storage.history("val_intersection").total
         union = self.trainer.storage.history("val_union").total
@@ -186,7 +181,6 @@ class SemSegEvaluator(HookBase):
                 m_iou, m_acc, all_acc
             )
         )
-
         for i in range(self.trainer.cfg.data.num_classes):
             self.trainer.logger.info(
                 "Class_{idx}-{name} Result: iou/accuracy {iou:.4f}/{accuracy:.4f}".format(

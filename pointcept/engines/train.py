@@ -307,11 +307,7 @@ class Trainer(TrainerBase):
             collate_fn=partial(point_collate_fn, mix_prob=self.cfg.mix_prob),
             pin_memory=True,
             worker_init_fn=init_fn,
-            << << << < HEAD
             drop_last=len(train_data) > self.cfg.batch_size,
-            == == == =
-            drop_last=len(train_data) > self.cfg.batch_size_val_per_gpu,
-            >>>>>> > 1dc31eb6afceefa57f30281b10a7e4417138f603
             persistent_workers=True,
         )
         return train_loader
