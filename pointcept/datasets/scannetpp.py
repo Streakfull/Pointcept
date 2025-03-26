@@ -76,3 +76,6 @@ class ScanNetPPDataset(DefaultDataset):
         else:
             raise NotImplementedError
         return data_dict
+
+    def __len__(self):
+        return 12
