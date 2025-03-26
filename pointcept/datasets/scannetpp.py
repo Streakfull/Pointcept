@@ -77,5 +77,16 @@ class ScanNetPPDataset(DefaultDataset):
             raise NotImplementedError
         return data_dict
 
+
+@DATASETS.register_module()
+class ScanNetPPTrainEvalSample(ScanNetPPDataset):
+    def __init__(
+        self,
+        nsamples=30,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.nsamples = nsamples
+
     def __len__(self):
-        return 12
+        return self.nsamples

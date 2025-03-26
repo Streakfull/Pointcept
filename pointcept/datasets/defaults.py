@@ -133,6 +133,7 @@ class DefaultDataset(Dataset):
             data_dict["instance"] = (
                 np.ones(data_dict["coord"].shape[0], dtype=np.int32) * -1
             )
+            print("TRAIN")
         return data_dict
 
     def get_data_name(self, idx):
@@ -146,7 +147,9 @@ class DefaultDataset(Dataset):
     def prepare_train_data(self, idx):
         # load data
         data_dict = self.get_data(idx)
+        name = data_dict["name"]
         data_dict = self.transform(data_dict)
+        data_dict["name"] = name
         return data_dict
 
     def prepare_test_data(self, idx):
@@ -154,6 +157,7 @@ class DefaultDataset(Dataset):
         data_dict = self.get_data(idx)
         data_dict = self.transform(data_dict)
         result_dict = dict(segment=data_dict.pop("segment"), name=data_dict.pop("name"))
+
         if "origin_segment" in data_dict:
             assert "inverse" in data_dict
             result_dict["origin_segment"] = data_dict.pop("origin_segment")
