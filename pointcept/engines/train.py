@@ -336,7 +336,7 @@ class Trainer(TrainerBase):
                 collate_fn=(
                     val_data.collate_fn
                     if hasattr(val_data, "collate_fn")
-                    else partial(point_collate_fn, mix_prob=self.cfg.mix_prob)
+                    else collate_fn
                 ),
             )
         return val_loader
