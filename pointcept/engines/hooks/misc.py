@@ -56,19 +56,25 @@ class IterationTimer(HookBase):
         self._iter_timer.reset()
         self.trainer.storage.put_scalar("batch_time", batch_time)
         self._remain_iter -= 1
-        remain_time = self._remain_iter * self.trainer.storage.history("batch_time").avg
+        remain_time = self._remain_iter * \
+            self.trainer.storage.history("batch_time").avg
         t_m, t_s = divmod(remain_time, 60)
         t_h, t_m = divmod(t_m, 60)
-        remain_time = "{:02d}:{:02d}:{:02d}".format(int(t_h), int(t_m), int(t_s))
+        remain_time = "{:02d}:{:02d}:{:02d}".format(
+            int(t_h), int(t_m), int(t_s))
         if "iter_info" in self.trainer.comm_info.keys():
             info = (
                 "Data {data_time_val:.3f} ({data_time_avg:.3f}) "
                 "Batch {batch_time_val:.3f} ({batch_time_avg:.3f}) "
                 "Remain {remain_time} ".format(
-                    data_time_val=self.trainer.storage.history("data_time").val,
-                    data_time_avg=self.trainer.storage.history("data_time").avg,
-                    batch_time_val=self.trainer.storage.history("batch_time").val,
-                    batch_time_avg=self.trainer.storage.history("batch_time").avg,
+                    data_time_val=self.trainer.storage.history(
+                        "data_time").val,
+                    data_time_avg=self.trainer.storage.history(
+                        "data_time").avg,
+                    batch_time_val=self.trainer.storage.history(
+                        "batch_time").val,
+                    batch_time_avg=self.trainer.storage.history(
+                        "batch_time").avg,
                     remain_time=remain_time,
                 )
             )
@@ -86,7 +92,8 @@ class InformationWriter(HookBase):
 
     def before_train(self):
         self.trainer.comm_info["iter_info"] = ""
-        self.curr_iter = self.trainer.start_epoch * len(self.trainer.train_loader)
+        self.curr_iter = self.trainer.start_epoch * \
+            len(self.trainer.train_loader)
 
     def before_step(self):
         self.curr_iter += 1
@@ -99,7 +106,7 @@ class InformationWriter(HookBase):
         self.trainer.comm_info["iter_info"] += info
 
     def record_forward_metrics(self, output_dict, input_dict):
-        if "seg_logits" not in output_dict.keys():
+        if "seg_logits" not in output_dict.keys() or "segment" not in input_dict.keys():
             return
         output = output_dict["seg_logits"]
         pred = output.max(1)[1]
@@ -124,13 +131,20 @@ class InformationWriter(HookBase):
             model_output_dict = self.trainer.comm_info["model_output_dict"]
             if "model_input_dict" in self.trainer.comm_info.keys():
                 model_input_dict = self.trainer.comm_info["model_input_dict"]
-                self.record_forward_metrics(model_output_dict, model_input_dict)
+                self.record_forward_metrics(
+                    model_output_dict, model_input_dict)
 
             self.model_output_keys = [
                 key for key in model_output_dict.keys() if "logits" not in key
             ]
             for key in self.model_output_keys:
-                self.trainer.storage.put_scalar(key, model_output_dict[key].item())
+                value = model_output_dict[key]
+                if torch.is_tensor(value):
+                    # If it's a tensor, get the item (scalar value)
+                    self.trainer.storage.put_scalar(key, value.item())
+                else:
+                    # If it's not a tensor, put the value as it is
+                    self.trainer.storage.put_scalar(key, value)
 
         for key in self.model_output_keys:
             self.trainer.comm_info["iter_info"] += "{key}: {value:.4f} ".format(
@@ -219,7 +233,8 @@ class CheckpointSaver(HookBase):
             if is_best:
                 shutil.copyfile(
                     filename,
-                    os.path.join(self.trainer.cfg.save_path, "model", "model_best.pth"),
+                    os.path.join(self.trainer.cfg.save_path,
+                                 "model", "model_best.pth"),
                 )
             if self.save_freq and (self.trainer.epoch + 1) % self.save_freq == 0:
                 shutil.copyfile(
@@ -242,7 +257,8 @@ class CheckpointLoader(HookBase):
     def before_train(self):
         self.trainer.logger.info("=> Loading checkpoint & weight ...")
         if self.trainer.cfg.weight and os.path.isfile(self.trainer.cfg.weight):
-            self.trainer.logger.info(f"Loading weight at: {self.trainer.cfg.weight}")
+            self.trainer.logger.info(
+                f"Loading weight at: {self.trainer.cfg.weight}")
             checkpoint = torch.load(
                 self.trainer.cfg.weight,
                 map_location=lambda storage, loc: storage.cuda(),
@@ -276,7 +292,8 @@ class CheckpointLoader(HookBase):
                 if self.trainer.cfg.enable_amp:
                     self.trainer.scaler.load_state_dict(checkpoint["scaler"])
         else:
-            self.trainer.logger.info(f"No weight found at: {self.trainer.cfg.weight}")
+            self.trainer.logger.info(
+                f"No weight found at: {self.trainer.cfg.weight}")
 
 
 @HOOKS.register_module()
@@ -458,7 +475,8 @@ class RuntimeProfilerV2(HookBase):
                 active=self.active,
                 repeat=self.repeat,
             ),
-            on_trace_ready=tensorboard_trace_handler(self.trainer.cfg.save_path),
+            on_trace_ready=tensorboard_trace_handler(
+                self.trainer.cfg.save_path),
             record_shapes=True,
             profile_memory=True,
             with_stack=True,
@@ -518,7 +536,8 @@ class WeightDecaySchedular(HookBase):
         for param_group in self.trainer.optimizer.param_groups:
             param_group["weight_decay"] = wd
         if self.trainer.writer is not None:
-            self.trainer.writer.add_scalar("params/wd", wd, self.scheduler.iter)
+            self.trainer.writer.add_scalar(
+                "params/wd", wd, self.scheduler.iter)
 
 
 @HOOKS.register_module()
